@@ -33,6 +33,7 @@ make dev
 ```bash
 cd repo-infrastructure
 cp .env.example .env
+# 在 .env 中设置 BUILD_MODE=local
 ./build-all.sh         
 # 构建全部镜像 + 合并启动
 ```
@@ -41,21 +42,12 @@ cp .env.example .env
 
 ## 拉取镜像组装
 
-子组每次推送 `main` 分支，GitHub Actions 自动构建镜像并推送到 ghcr.io。大组无需子组源码，直接拉取镜像组装运行：
+子组每次推送 `main` 分支，GitHub Actions 自动构建镜像并推送到 ghcr.io。大组直接拉取镜像组装运行：
 
 ```bash
-# 1. 克隆基建仓库
 git clone git@github.com:uppi7/repo-infrastructure.git
 cd repo-infrastructure
 cp .env.example .env
-
-# 2. 将 docker-compose.yml 中的镜像名指向 ghcr.io
-sed -i \
-  -e 's|image: zjuse-backend-base:latest|image: ghcr.io/uppi7/zjuse-backend-base:latest|' \
-  -e 's|image: zjuse-backend-course:latest|image: ghcr.io/uppi7/zjuse-backend-course:latest|' \
-  docker-compose.yml
-
-# 3. 启动
-docker compose up --build -d
+./build-all.sh
 # http://localhost:8080/base/ 和 http://localhost:8080/course/
 ```
