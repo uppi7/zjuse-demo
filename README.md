@@ -1,53 +1,83 @@
-# zjuse-demo
+# Zjuse Swarm Demo
 
-## 仓库结构
+zjuse demo 在 Swarm 下的版本，用于单机环境下独立开发测试，模拟实际生产环境。
 
-```
-zjuse-demo/
-├── repo-group1-base/      基础信息组——教师信息查询服务
-├── repo-group2-course/    排课组——排课服务
-└── repo-infrastructure/   基建——Nginx 网关 + Docker Compose 合并部署
-```
+## Prerequisite
 
-三个仓库通过 Git Submodule 引用，各仓库自身逻辑在各自README中详细介绍。
++ Docker
++ curl
++ make
 
-## 克隆
+## Usage
+
+### Clone
+
+github 账户需设置公钥，确保正常使用 ssh
+
+完成后，拉取仓库，切换分支：
 
 ```bash
 git clone --recurse-submodules git@github.com:uppi7/zjuse-demo.git
+git checkout -b swarm-dev
+git pull
 ```
 
-## 本地体验
+### Build
 
-**体验子系统独立开发（以 group1 为例）：**
+1. 创建本地环境
 
 ```bash
-cd repo-group1-base
-cp .env.example .env
-make dev
-# http://localhost:5173
+make all
 ```
 
-**体验大系统本地合并：**
+> 主要进行以下操作
+
+单机环境下 DinD 创建多节点：
 
 ```bash
-cd repo-infrastructure
-cp .env.example .env
-# 在 .env 中设置 BUILD_MODE=local
-./build-all.sh         
-# 构建全部镜像 + 合并启动
+docker ps
 ```
+
+![](docs/photos/node.png)
 
 ---
 
-## 拉取镜像组装
+模块打包本地镜像并传输到节点：
 
-子组每次推送 `main` 分支，GitHub Actions 自动构建镜像并推送到 ghcr.io。大组直接拉取镜像组装运行：
+![](docs/photos/patch.png)
+
+---
+
+各节点部署：
+
+![](docs/photos/service.png)
+
+---
+
+部署完成后，网关被 Forward 到宿主机 8080 端口：
+
+![](docs/photos/curl.png)
+
+正常返回健康状态，后续本地开发子模块需与网关交互
+
+2. 清理本地节点
 
 ```bash
-git clone git@github.com:uppi7/repo-infrastructure.git
-cd repo-infrastructure
-cp .env.example .env
-./build-all.sh
-# http://localhost:8080/base/ 和 http://localhost:8080/course/
+make clean
 ```
+
+删除 DinD 节点以及本地镜像
+
+## Contribution
+
+添加 demo 子模块后需要更改的文件位置：
+
+1. Makefile：添加变量以及子模块路径
+2. repo-infrastructure/gateway/nginx.conf：声明子模块代理
+3. repo-infrastructure/scripts
+   1. build.sh：创建子模块本地镜像，包括前端后端等，OT 需要将监考模块加入
+   2. deploy.sh：环境变量注入节点
+   3. load.sh：传输本地镜像到各节点
+4. repo-infrastructure/init.sql：数据库初始脚本
+
+5. repo-infrastructure/docker-stack.yml：添加服务信息
