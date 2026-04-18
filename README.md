@@ -18,6 +18,7 @@ github 账户需设置公钥，确保正常使用 ssh
 
 ```bash
 git clone --recurse-submodules -b swarm-dev git@github.com:uppi7/zjuse-demo.git
+git submodule update --remote --merge
 ```
 
 ### Build
